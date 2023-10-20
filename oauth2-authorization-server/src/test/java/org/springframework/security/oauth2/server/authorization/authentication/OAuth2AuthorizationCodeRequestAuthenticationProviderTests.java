@@ -468,6 +468,32 @@ public class OAuth2AuthorizationCodeRequestAuthenticationProviderTests {
 	}
 
 	@Test
+	public void authenticateWhenRequireAuthorizationConsentAndOnlyScopesNotRequiringConsentRequestedThenAuthorizationConsentNotRequired() {
+		RegisteredClient registeredClient = TestRegisteredClients.registeredClient()
+				.clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
+				.scopes(scopes -> {
+					scopes.clear();
+					scopes.add(OidcScopes.OPENID);
+					scopes.add(OidcScopes.EMAIL);
+				})
+				.scopesNotRequiringConsent(scopes -> scopes.addAll(Set.of(OidcScopes.OPENID, OidcScopes.EMAIL)))
+				.build();
+		when(this.registeredClientRepository.findByClientId(eq(registeredClient.getClientId())))
+				.thenReturn(registeredClient);
+
+		String redirectUri = registeredClient.getRedirectUris().toArray(new String[0])[1];
+		OAuth2AuthorizationCodeRequestAuthenticationToken authentication =
+				new OAuth2AuthorizationCodeRequestAuthenticationToken(
+						AUTHORIZATION_URI, registeredClient.getClientId(), principal,
+						redirectUri, STATE, registeredClient.getScopes(), null);
+
+		OAuth2AuthorizationCodeRequestAuthenticationToken authenticationResult =
+				(OAuth2AuthorizationCodeRequestAuthenticationToken) this.authenticationProvider.authenticate(authentication);
+
+		assertAuthorizationCodeRequestWithAuthorizationCodeResult(registeredClient, authentication, authenticationResult);
+	}
+
+	@Test
 	public void authenticateWhenRequireAuthorizationConsentAndAllPreviouslyApprovedThenAuthorizationConsentNotRequired() {
 		RegisteredClient registeredClient = TestRegisteredClients.registeredClient()
 				.clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())

@@ -296,9 +296,8 @@ public final class OAuth2AuthorizationCodeRequestAuthenticationProvider implemen
 		if (!registeredClient.getClientSettings().isRequireAuthorizationConsent()) {
 			return false;
 		}
-		// 'openid' scope does not require consent
-		if (authorizationRequest.getScopes().contains(OidcScopes.OPENID) &&
-				authorizationRequest.getScopes().size() == 1) {
+
+		if (authorizationRequest.getScopes().containsAll(registeredClient.getScopesNotRequiringConsent())) {
 			return false;
 		}
 
