@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.core.oidc.OidcScopes;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -449,6 +450,24 @@ public class RegisteredClientTests {
 		assertThat(registration.getScopes()).isEqualTo(SCOPES);
 		assertThat(registration.getClientSettings().isRequireProofKey()).isTrue();
 		assertThat(registration.getClientSettings().isRequireAuthorizationConsent()).isTrue();
+		assertThat(registration.getScopesNotRequiringConsent()).isEqualTo(Set.of(OidcScopes.OPENID));
+	}
+
+	@Test
+	public void buildWhenScopesNotRequiringConsentConsumerIsProvidedThenConsumerAccepted() {
+		Instant clientIdIssuedAt = Instant.now();
+		RegisteredClient registration = RegisteredClient.withId(ID)
+				.clientId(CLIENT_ID)
+				.clientIdIssuedAt(clientIdIssuedAt)
+				.clientName("client-name")
+				.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+				.clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+				.redirectUris(redirectUris -> redirectUris.addAll(REDIRECT_URIS))
+				.scopes(scopes -> scopes.addAll(SCOPES))
+				.scopesNotRequiringConsent(scopes -> scopes.addAll(SCOPES))
+				.build();
+
+		assertThat(registration.getScopesNotRequiringConsent()).isEqualTo(SCOPES);
 	}
 
 }

@@ -28,6 +28,7 @@ import java.util.function.Consumer;
 import org.springframework.lang.Nullable;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.security.oauth2.server.authorization.util.SpringAuthorizationServerVersion;
@@ -58,6 +59,7 @@ public class RegisteredClient implements Serializable {
 	private Set<String> scopes;
 	private ClientSettings clientSettings;
 	private TokenSettings tokenSettings;
+	private Set<String> scopesNotRequiringConsent;
 
 	protected RegisteredClient() {
 	}
@@ -167,6 +169,10 @@ public class RegisteredClient implements Serializable {
 		return this.scopes;
 	}
 
+	public Set<String> getScopesNotRequiringConsent() {
+		return this.scopesNotRequiringConsent;
+	}
+
 	/**
 	 * Returns the {@link ClientSettings client configuration settings}.
 	 *
@@ -270,6 +276,10 @@ public class RegisteredClient implements Serializable {
 		private final Set<String> redirectUris = new HashSet<>();
 		private final Set<String> postLogoutRedirectUris = new HashSet<>();
 		private final Set<String> scopes = new HashSet<>();
+		private final Set<String> scopesNotRequiringConsent = new HashSet<>(){{
+			this.add(OidcScopes.OPENID);
+		}};
+
 		private ClientSettings clientSettings;
 		private TokenSettings tokenSettings;
 
@@ -490,6 +500,11 @@ public class RegisteredClient implements Serializable {
 			return this;
 		}
 
+		public Builder scopesNotRequiringConsent(Consumer<Set<String>> scopesNotRequiringConsentConsumer) {
+			scopesNotRequiringConsentConsumer.accept(this.scopesNotRequiringConsent);
+			return this;
+		}
+
 		/**
 		 * Sets the {@link ClientSettings client configuration settings}.
 		 *
@@ -574,6 +589,8 @@ public class RegisteredClient implements Serializable {
 					new HashSet<>(this.postLogoutRedirectUris));
 			registeredClient.scopes = Collections.unmodifiableSet(
 					new HashSet<>(this.scopes));
+			registeredClient.scopesNotRequiringConsent = Collections.unmodifiableSet(
+					new HashSet<>(this.scopesNotRequiringConsent));
 			registeredClient.clientSettings = this.clientSettings;
 			registeredClient.tokenSettings = this.tokenSettings;
 
